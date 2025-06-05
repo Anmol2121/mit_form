@@ -18,7 +18,7 @@ scope = [
 ]
 
 creds = ServiceAccountCredentials.from_json_keyfile_name(
-    r"C:\MIT_regestration form\demopythonsheet-462010-8bcba9d1911a.json", scope)
+    r"gspread-creds.json", scope)
 client = gspread.authorize(creds)
 sheet_url = "https://docs.google.com/spreadsheets/d/1xY6RLbn__y3T7gnTJ7tCCDpbLbNYNsjidpDIhEiRn3w/edit?usp=sharing"
 sheet = client.open_by_url(sheet_url).sheet1
