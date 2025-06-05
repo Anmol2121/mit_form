@@ -8,33 +8,29 @@ from io import BytesIO
 
 
 
+
+
+
+# ===== Google Sheets Setup =====
 scope = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive"
 ]
 
-#creds = ServiceAccountCredentials.from_json_keyfile_name(
- #   r"C:\MIT_regestration form\demopythonsheet-462010-8bcba9d1911a.json", scope)
-
-import os
-cred_path = "/etc/secrets/gspread-creds.json"
-creds = ServiceAccountCredentials.from_json_keyfile_name(cred_path, scope)
-
+creds = ServiceAccountCredentials.from_json_keyfile_name(
+    r"C:\MIT_regestration form\demopythonsheet-462010-8bcba9d1911a.json", scope)
 client = gspread.authorize(creds)
 sheet_url = "https://docs.google.com/spreadsheets/d/1xY6RLbn__y3T7gnTJ7tCCDpbLbNYNsjidpDIhEiRn3w/edit?usp=sharing"
 sheet = client.open_by_url(sheet_url).sheet1
 
-
+# ===== Helper function to generate unique ID =====
 def generate_unique_id():
     return "MIT" + ''.join([str(random.randint(0, 9)) for _ in range(3)])
 
+# ===== Helper function to send email =====
 def send_email(receiver_email, unique_id, name):
-    #sender_email = "a15767089@gmail.com"
-    #sender_password = "mmld ufkk xntg ucrt"
-
-    sender_email = st.secrets["email"]["sender"]
-    sender_password = st.secrets["email"]["password"]
-
+    sender_email = "a15767089@gmail.com"
+    sender_password = "mmld ufkk xntg ucrt"
 
     subject = "MIT Registration Successful"
     body = f"Dear {name},\n\nThank you for registering at MIT.\nYour Unique ID is: {unique_id}\n\nRegards,\nMIT Admissions"
@@ -47,12 +43,13 @@ def send_email(receiver_email, unique_id, name):
         st.error(f"Failed to send email: {e}")
         return False
 
+# ===== Helper function to create PDF =====
 def create_pdf(data):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
 
-
+    # ===== Style Functions =====
     def header(title):
         pdf.set_fill_color(240, 240, 240)
         pdf.set_font("Arial", 'B', 12)
@@ -62,7 +59,7 @@ def create_pdf(data):
         pdf.ln(h)
 
     def draw_field(label, value, h=8):
-        if value:  
+        if value:  # Show only if value is present
             pdf.set_font("Arial", 'B', 10)
             pdf.cell(60, h, f"{label}:", border=0)
             pdf.set_font("Arial", '', 10)
@@ -79,12 +76,14 @@ def create_pdf(data):
             pdf.set_font("Arial", '', 10)
             pdf.cell(0, h, str(value2), ln=True)
 
+    # ===== Title =====
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, "MEERUT INSTITUTE OF TECHNOLOGY", ln=True, align="C")
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(0, 10, "STUDENT REGISTRATION FORM", ln=True, align="C")
     pdf.ln(5)
 
+    # ===== Section: Personal Info =====
     header("1. Personal Information")
     draw_field("Unique ID", data["Unique ID"])
     draw_double_field("Name", data["Name"], "Gender", data["Gender"])
@@ -92,12 +91,14 @@ def create_pdf(data):
     draw_field("Date of Birth", data["Date of Birth"])
     draw_field("Address", data["Address"])
 
+    # ===== Section: Academic Info =====
     line_gap()
     header("2. Academic Information")
     draw_field("Course Applied For", data["Course"])
     draw_double_field("Entrance Exam Appeared", data["Appeared Entrance Exam"], "Exam Name", data["Entrance Exam Name"])
     draw_double_field("10th Percentage", f"{data['10th Percentage']}%", "12th Percentage", f"{data['12th Percentage']}%")
 
+    # ===== Footer =====
     line_gap(10)
     pdf.set_font("Arial", '', 11)
     pdf.cell(0, 10, "Date: ____ / ____ / ______", ln=True)
@@ -109,17 +110,26 @@ def create_pdf(data):
     pdf.set_text_color(100, 100, 100)
     pdf.cell(0, 10, "This is a computer-generated document. No signature required.", ln=True, align="C")
 
+    # Return PDF
     pdf_output = pdf.output(dest='S').encode('latin1')
     return BytesIO(pdf_output)
 
 
 
+
+
+
+
+
+# ===== Streamlit UI (Next-Level Professional Style) =====
 st.set_page_config(page_title="MIT Admission Form", layout="centered")
 
 with st.spinner("Loading form..."):
     import time
-    time.sleep(1.5)  
+    time.sleep(1.5)  # simulating load
 
+
+# ===== Custom CSS =====
 st.markdown("""
     <style>
         /* Animated Gradient Background */
@@ -207,9 +217,12 @@ st.markdown("""
 
 st.markdown('<div class="animate-fade">', unsafe_allow_html=True)
 
+
+# ===== Header =====
 st.markdown("<h1>Meerut Institute of Technology</h1>", unsafe_allow_html=True)
 st.markdown("<h4>Online Admission Registration Form</h4>", unsafe_allow_html=True)
 
+# ===== Form Start =====
 with st.form("registration_form"):
     st.markdown('<div class="section-title">Personal Details</div>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
@@ -238,6 +251,7 @@ with st.form("registration_form"):
     st.markdown('<br>', unsafe_allow_html=True)
     submitted = st.form_submit_button("Submit Application")
 
+# ===== Submission Handling =====
 if submitted:
     if not name or not email:
         st.error("Please fill in at least Name and Email.")
@@ -289,7 +303,3 @@ if submitted:
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown("<hr>", unsafe_allow_html=True)
-
-        
-
-
