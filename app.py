@@ -3,6 +3,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import yagmail
 import random
+import datetime
 from fpdf import FPDF
 from io import BytesIO
 
@@ -258,7 +259,13 @@ with st.form("registration_form"):
         email = st.text_input("Email *")
         phone = st.text_input("Phone Number *")
         gender = st.radio("Gender", ["Male", "Female", "Other"])
-        dob = st.date_input("Date of Birth")
+        #dob = st.date_input("Date of Birth")
+        dob = st.date_input(
+        "Date of Birth",
+    min_value=datetime.date(1960, 1, 1),   
+    max_value=datetime.date(2025, 1, 1),   
+    value=datetime.date(2000, 1, 1))
+        
         category = st.selectbox("Category", ["GEN", "OBC", "SC", "ST", "Other"])
         address = st.text_area("Address")
         pin_code = st.text_input("PIN Code")
