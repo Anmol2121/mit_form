@@ -339,8 +339,10 @@ if submitted:
         st.error("Please select a Course.")
     else:
         unique_id = generate_unique_id()
+        today = datetime.date.today().strftime("%d-%m-%Y") 
 
         row = [
+            today, 
     unique_id,
     name,
     email,
