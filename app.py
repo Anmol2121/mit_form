@@ -43,9 +43,6 @@ def send_email(receiver_email, unique_id, name):
 from fpdf import FPDF
 from io import BytesIO
 
-from io import BytesIO
-from fpdf import FPDF
-
 # Helper function to clean unsafe characters
 def safe(text):
     return str(text).encode('latin-1', 'replace').decode('latin-1')
@@ -341,6 +338,7 @@ with st.form("registration_form"):
     submitted = st.form_submit_button("Submit Application")
 
 
+
 if submitted:
     if not name or not email:
         st.error("Please fill in at least Name and Email.")
@@ -350,72 +348,90 @@ if submitted:
         st.error("Please select a Course.")
     else:
         unique_id = generate_unique_id()
-        today = datetime.date.today().strftime("%d-%m-%Y") 
+        today = datetime.date.today().strftime("%d-%m-%Y")
 
+        # Sheet data append
         row = [
-            today,unique_id,name,email,phone,gender,
-    str(dob),category,father_name,father_phone,father_email,mother_name,
-    mother_phone,occupation,income,address,pin_code,course,entrance,entrance_name,roll_no,
-    app_no,score,tenth_percentage,tenth_school,
-    tenth_board,tenth_roll,twelfth_percentage,twelfth_school,
-    twelfth_board,twelfth_roll,other_course,other_college,other_university,other_percentage,admission_source
-]
+            today, unique_id, name, email, phone, gender,
+            str(dob), category, father_name, father_phone, father_email, mother_name,
+            mother_phone, occupation, income, address, pin_code, course, entrance, entrance_name, roll_no,
+            app_no, score, tenth_percentage, tenth_school,
+            tenth_board, tenth_roll, twelfth_percentage, twelfth_school,
+            twelfth_board, twelfth_roll, other_course, other_college, other_university, other_percentage, admission_source
+        ]
         sheet.append_row(row, value_input_option='USER_ENTERED', table_range='A1')
-        email_status = send_email(email, unique_id, name)
 
+        # Create PDF and save in session
         data_dict = {
-    "Unique ID": unique_id,"Name": name,
-    "Email": email,"Phone": phone,"Gender": gender,"Date of Birth": dob,"Category": category,"Father Name": father_name,"Father Phone": father_phone,"Father Email": father_email,"Mother Name": mother_name,"Mother Phone": mother_phone,"Occupation": occupation,"Annual Income": income,"Address": address,"PIN": pin_code,"Course": course,
-    "Appeared Entrance Exam": entrance,"Entrance Exam Name": entrance_name,"Roll No": roll_no,
-    "Application No": app_no,"Score": score,"10th Percentage": tenth_percentage,"10th School": tenth_school,
-    "10th Board": tenth_board,"10th Roll No": tenth_roll,"12th Percentage": twelfth_percentage,"12th School": twelfth_school,"12th Board": twelfth_board,"12th Roll No": twelfth_roll,"Other Course": other_course,"Other College": other_college,"Other University": other_university,"Other Percentage": other_percentage,"Admission Source": admission_source
-}
-        pdf_buffer = create_pdf(data_dict)
-        st.success("Registration Successful!")
+            "Unique ID": unique_id, "Name": name, "Email": email, "Phone": phone,
+            "Gender": gender, "Date of Birth": dob, "Category": category, "Father Name": father_name,
+            "Father Phone": father_phone, "Father Email": father_email, "Mother Name": mother_name,
+            "Mother Phone": mother_phone, "Occupation": occupation, "Annual Income": income, "Address": address,
+            "PIN": pin_code, "Course": course, "Appeared Entrance Exam": entrance,
+            "Entrance Exam Name": entrance_name, "Roll No": roll_no, "Application No": app_no,
+            "Score": score, "10th Percentage": tenth_percentage, "10th School": tenth_school,
+            "10th Board": tenth_board, "10th Roll No": tenth_roll, "12th Percentage": twelfth_percentage,
+            "12th School": twelfth_school, "12th Board": twelfth_board, "12th Roll No": twelfth_roll,
+            "Other Course": other_course, "Other College": other_college, "Other University": other_university,
+            "Other Percentage": other_percentage, "Admission Source": admission_source
+        }
+
+        # Save everything in session
+        st.session_state.pdf_data = create_pdf(data_dict)
+        st.session_state.unique_id = unique_id
+        st.session_state.email_status = send_email(email, unique_id, name)
+        st.session_state.email = email
+        st.session_state.show_result = True
         st.session_state.show_popup = True
-        with st.expander("View your registration summary"):
-            st.markdown(f"""
-                **Unique ID**: `{unique_id}`  
-                **Email Sent**: `{email}` {"✅" if email_status else "❌"}  
-                Download your registration PDF below:
-            """)
-            st.download_button(
-                label="Download Registration PDF",data=pdf_buffer,file_name=f"{unique_id}_registration.pdf",mime="application/pdf",
-            )
-            if st.session_state.get("show_popup", False):
-                st.markdown("""
-        <div class="popup-box">
-            <p>🎉 <b>Thank you for registering at MIT Meerut.</b></p>
-            <a href="https://www.mitmeerut.ac.in" target="_blank" class="visit-link">🔗 Visit Official Website</a>
-        </div>
-    """, unsafe_allow_html=True)
-                
-                st.markdown("""<style>.popup-box {
-    background: #e8f0ff;
-    border: 2px solid #004080;
-    padding: 20px;
-    border-radius: 10px;
-    margin-top: 20px;
-    animation: popupFade 1s ease-in-out;
-    text-align: center;
-    font-size: 16px;
-    color: #002855;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-.popup-box a.visit-link {
-    display: inline-block;
-    margin-top: 10px;
-    padding: 8px 16px;
-    background: #002855;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-}
-.popup-box a.visit-link:hover {
-    background: #004080;}@keyframes popupFade {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-</style>""", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-        st.markdown("<hr>", unsafe_allow_html=True)
+
+
+# Show result only if form was submitted
+if st.session_state.get("show_result", False):
+    st.success("Registration Successful!")
+    with st.expander("View your registration summary"):
+        st.markdown(f"""
+            **Unique ID**: `{st.session_state.unique_id}`  
+            **Email Sent**: `{st.session_state.email}` {"✅" if st.session_state.email_status else "❌"}  
+            Download your registration PDF below:
+        """)
+        st.download_button(
+            label="Download Registration PDF",
+            data=st.session_state.pdf_data,
+            file_name=f"{st.session_state.unique_id}_registration.pdf",
+            mime="application/pdf",
+        )
+
+        # Show popup and visit link
+        if st.session_state.get("show_popup", False):
+            st.markdown("""<div class="popup-box">
+                <p>🎉 <b>Thank you for registering at MIT Meerut.</b></p>
+                <a href="https://www.mitmeerut.ac.in" target="_blank" class="visit-link">🔗 Visit Official Website</a>
+            </div>""", unsafe_allow_html=True)
+
+            st.markdown("""<style>.popup-box {
+                background: #e8f0ff;
+                border: 2px solid #004080;
+                padding: 20px;
+                border-radius: 10px;
+                margin-top: 20px;
+                animation: popupFade 1s ease-in-out;
+                text-align: center;
+                font-size: 16px;
+                color: #002855;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+            .popup-box a.visit-link {
+                display: inline-block;
+                margin-top: 10px;
+                padding: 8px 16px;
+                background: #002855;
+                color: white;
+                text-decoration: none;
+                border-radius: 5px;
+            }
+            .popup-box a.visit-link:hover {
+                background: #004080;}
+            @keyframes popupFade {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }</style>""", unsafe_allow_html=True)
